@@ -1,3 +1,16 @@
-# skip
+# skip archive folders, raw data, and large processed files.
 /data/01_raw
+/data/02_intermediate/archive
 /data/02_intermediate/boston_stays.pickle 
+/data/02_intermediate/miami_stays.pickle
+/data/02_intermediate/chicago_stays.pickle
+/data/02_intermediate/edge_shp_dic.pickle
+/data/03_processed
+/data/05_model_outputs/network_property_degree_clustering.pickle
+
+/src/01_raw_data/archive
+/src/02_intermediate/archive
+/src/03_process/archive
+/src/04_modelling/archive
+/src/05_model_evaluation/archive
+/src/06_report/archive

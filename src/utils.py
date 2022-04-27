@@ -4,11 +4,60 @@ import geopandas as gpd
 import pickle
 import matplotlib.pyplot as plt 
 import contextily as ctx
-
+from shapely.geometry import LineString
 
 def temp_return():
     print("The util module works")
 
+
+def turn_node_to_edge_shp(df_shp, origin_col_name, destination_col_name):
+    # df_shp index is the node index
+    # feel free to change the origin_col, destination_col names
+    # origin_col_name = GEOID_home, destination_col_name = GEOID
+    index = pd.MultiIndex.from_product([df_shp.index, df_shp.index], names = [origin_col_name, destination_col_name])
+    df_edge_shp = pd.DataFrame(index=index).reset_index()
+    
+    # define edge_list
+    edge_list = []
+    
+    for idx in range(df_edge_shp.shape[0]):
+        origin = df_edge_shp.loc[idx, origin_col_name]
+        destination = df_edge_shp.loc[idx, destination_col_name]
+        edge = LineString([df_shp.loc[origin, 'geometry'].centroid,
+                           df_shp.loc[destination, 'geometry'].centroid])
+        edge_list.append(edge)
+        if idx%10000 == 0: # check the speed
+            print(idx)
+    
+    # attach edge column.
+    df_edge_shp['geometry'] = edge_list
+    
+    # 
+    edge_shp = gpd.GeoDataFrame(df_edge_shp, crs = 'epsg:4269')
+    return edge_shp
+
+
+def turn_df_to_adj(df_asymmetric, df_shp):
+    ''' turn an asymmetric dataframe (source to target format) to a symmetric adjacency matrix 
+        with the targetted 992 * 992 size '''
+    index_list = list(df_shp.sort_index().index)
+    df_zeros = pd.DataFrame(np.zeros((df_shp.shape[0], df_shp.shape[0])), 
+                                index = df_shp.index,
+                                columns = df_shp.index)
+    df_symmetric = df_zeros.add(df_asymmetric, fill_value = 0.0)
+    df_symmetric = df_symmetric.loc[index_list, index_list] # truly symmetric!
+    df_symmetric = np.maximum(df_symmetric.values, df_symmetric.values.T)
+    df_symmetric = pd.DataFrame(df_symmetric, 
+                                index = df_zeros.index,
+                                columns = df_zeros.columns)
+
+    # remove the diagnol values
+    np.fill_diagonal(df_symmetric.values, 0.0)
+    
+    return df_symmetric
+
+
+    
 def plot_node_attributes(node_shp, column_name, title_name, fig_name, save_path, xlim = None, ylim = None):
     '''
     plot the attributes for the nodes in a shapefile
