@@ -87,6 +87,7 @@ def plot_node_attributes(node_shp, column_name, title_name, fig_name, save_path,
     
     plt.tight_layout()
     plt.show()
+    
 #     fig.savefig(save_path+fig_name+'.png')
 #     plt.close()
 
